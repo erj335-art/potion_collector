@@ -10,6 +10,7 @@
 #define TILE_FLOOR 'F'
 #define TILE_POTION 'P'
 
+void map_load(const char *filename);
 void map_print(int player_row, int player_col);
 bool map_is_walkable(int row, int col);
 char map_get_tile(int row, int col);

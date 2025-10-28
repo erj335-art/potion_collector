@@ -1,19 +1,33 @@
 #include "map.h"
 #include <stdio.h>
 
-char map_data[MAP_ROWS][MAP_COLS] = {
-    {'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'W', 'W', 'F', 'F', 'P', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'W', 'W', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'W'},
-    {'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'}};
+char map_data[MAP_ROWS][MAP_COLS];
+
+void map_load(const char *filename) {
+
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL) {
+        printf("Failed to open map file");
+        return;
+    }
+
+    for (int row = 0; row < MAP_ROWS; row++) {
+        for (int col = 0; col < MAP_COLS; col++) {
+            int ch = fgetc(file);
+            if (ch == EOF) {
+                fclose(file);
+                return;
+            }
+            if (ch == '\n') {
+                col--;
+                continue;
+            }
+            map_data[row][col] = (char)ch;
+        }
+    }
+    fclose(file);
+}
 
 bool map_in_bounds(int row, int col) {
     return row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS;

@@ -8,6 +8,7 @@ char readUserInput(void);
 // ====== Main ======
 int main(void)
 {
+    map_load("map.txt");
     printf("Hello Wizard! 🧙‍♂️\n");
     while (1 == 1) {
         // Windows Terminal Clean Function (Uses stdlib)

@@ -62,3 +62,9 @@ dkms.conf
 
 # Unignore all dirs
 !*/
+
+# ignore macOS system files
+.DS_Store
+
+# ignore vscode settings
+.vscode/
