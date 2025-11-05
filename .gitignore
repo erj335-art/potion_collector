@@ -54,15 +54,6 @@ dkms.conf
 # debug information files
 *.dwo
 
-# Ignore all
-*
-
-# Unignore all with extensions
-!*.*
-
-# Unignore all dirs
-!*/
-
 # ignore macOS system files
 .DS_Store
 
