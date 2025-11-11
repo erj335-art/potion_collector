@@ -47,7 +47,7 @@ DEPS := -MMD -MP
 
 # Debug and Release flags
 DBG := -g -O0 -fno-omit-frame-pointer
-REL := -O2 -DNDEBUG
+REL := -O2 -DNDEBUG -static -s
 
 # Project structure
 SRC := $(wildcard *.c)
