@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "map.h"
+#include "potion.h"
 
 struct Player {
     int level;
@@ -29,7 +30,6 @@ void player_print_stats(void) {
 }
 
 void player_move(char direction) {
-    printf("Moving player to %c\n\n", direction);
     switch (direction) {
         case 'W':
         case 'w':
@@ -56,15 +56,12 @@ void player_move(char direction) {
     }
 }
 
-void player_collect_items(void) {
-    char tile = map_get_tile(player.position_x, player.position_y);
-    if (tile == TILE_POTION) {
-        map_set_tile(player.position_x, player.position_y, TILE_FLOOR);
-        player_gain_potion_rewards();
-    }
-    //if (map_get_tile(player.position_x, player.position_y) == 'M') {
-        // FIGHT HERE!
-    //}
+bool player_collect_items(void) {
+
+    if(potion_tryCollect(player.position_y, player.position_x))
+        return true;
+        
+    return false;
 }
 
 int player_get_row(void) {

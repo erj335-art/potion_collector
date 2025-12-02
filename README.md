@@ -6,28 +6,20 @@ Feel free to share your improvements.
 
 # Compile
 
-### Using GCC
+We always compile using:
 
 `gcc -Wall -Wextra -Werror -std=c17 game.c map.c player.c -o game`
-
-### Using MakeFile
-
-- `make` builds debug (default).
-- `make debug` same as make. Builds debug.
-- `make release` optimized build.
-- `make run` builds debug then runs app/exe
-- `make clean` deletes all .o, .d and builds
-
-Don't forget to install the required packages to use make:
 
 Installing Make, CMake and pkg-config
 
 - Windows
     ```bash
-    pacman -S make cmake mingw-w64-x86_64-pkg-config
-    ```
+pacman -S make cmake mingw-w64-x86_64-pkg-config mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-sdl3 mingw-w64-ucrt-x86_64-sdl3-image
+    ````
+
+Don't forget to add C:\msys64\usr\bin to system variables and restart computer!
 
 - MacOS
     ```bash
-    brew install make cmake pkg-config
+brew install make cmake pkg-config sdl3 sdl3_image
     ```
