@@ -4,6 +4,13 @@
 Potion potions[POTION_SIZE];
 int potionQuantity = 0;
 
+void reset_potions() {
+    for (int i = 0; i < POTION_SIZE; i++) {
+        potions[i].visible = false;
+    }
+    potionQuantity = 0;
+}
+
 void create_potion(int x, int y)
 {
     potions[potionQuantity].x = x;

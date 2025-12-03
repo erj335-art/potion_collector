@@ -5,6 +5,7 @@
 #include "map.h"
 #include "player.h"
 #include "potion.h"
+#include "gamestate.h"
 
 #define APP_NAME "Potion Collector"
 
@@ -23,7 +24,9 @@ static SDL_Texture *wallTexture = NULL;
 static SDL_Texture *wizardTexture = NULL;
 static SDL_Texture *potionTexture = NULL;
 
-void renderTextures(void);
+void renderGame(void);
+void renderMainMenu(void);
+void renderGameFinished(void);
 char readUserInput(void);
 
 int main(void)
@@ -33,13 +36,10 @@ int main(void)
     renderer = sdl_initialize_renderer(window);
     sdl_initialize_audio();
 
-    player_initialize();
     grassTexture = sdl_load_texture(renderer, "sprites/tiles/tile000.png");
     wallTexture = sdl_load_texture(renderer, "sprites/tiles/tile001.png");
     wizardTexture = sdl_load_texture(renderer, "sprites/characters/wizard.png");
     potionTexture = sdl_load_texture(renderer, "sprites/items/potion.png");
-
-    map_load("maps/level1.txt");
 
     // Game Loop
     int running = 1;
@@ -57,24 +57,46 @@ int main(void)
 
             if (event.type == SDL_EVENT_KEY_DOWN)
             {
-                if (event.key.key == SDLK_W)
-                    player_move('W');
-                if (event.key.key == SDLK_A)
-                    player_move('A');
-                if (event.key.key == SDLK_S)
-                    player_move('S');
-                if (event.key.key == SDLK_D)
-                    player_move('D');
+                if (gameState() == MAIN_MENU && event.key.key == SDLK_SPACE)
+                {
+                    player_initialize();
+                    reset_potions();
+                    map_load("maps/level1.txt");
+                    setGameState(INGAME);
+                }
+                
+                if (gameState() == FINISHED && event.key.key == SDLK_SPACE)
+                {
+                    setGameState(MAIN_MENU);
+                }
 
-                if(player_collect_items()){
-                    printf("All potions collected! You win!\n");
-                    running = 0;
+                if (gameState() == INGAME)
+                {
+                    if (event.key.key == SDLK_W)
+                        player_move('W');
+                    if (event.key.key == SDLK_A)
+                        player_move('A');
+                    if (event.key.key == SDLK_S)
+                        player_move('S');
+                    if (event.key.key == SDLK_D)
+                        player_move('D');
+
+                    if (player_collect_items())
+                    {
+                        printf("All potions collected! You win!\n");
+                        setGameState(FINISHED);
+                    }
                 }
             }
         }
 
         // Render textures
-        renderTextures();
+        if (gameState() == MAIN_MENU)
+            renderMainMenu();
+        if (gameState() == INGAME)
+            renderGame();
+        if (gameState() == FINISHED)
+            renderGameFinished();
 
         // map_print(player_get_row(), player_get_col());
 
@@ -132,7 +154,7 @@ void renderPotions()
     }
 }
 
-void renderTextures(void)
+void renderGame(void)
 {
     const int charsize = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
 
@@ -148,4 +170,23 @@ void renderTextures(void)
     SDL_RenderDebugTextFormat(renderer, (float)((APP_WIDTH - (charsize * 46)) / 2), APP_HEIGHT - charsize, "(This program has been running for %" SDL_PRIu64 " seconds.)", SDL_GetTicks() / 1000);
 
     SDL_RenderPresent(renderer); /* put it all on the screen! */
+}
+
+void renderMainMenu(void)
+{
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); 
+    SDL_RenderClear(renderer);    
+    
+    showText(renderer, 100, 250, "Press SpaceBar to Start!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    SDL_RenderPresent(renderer);
+}
+
+void renderGameFinished(void)
+{
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); 
+    SDL_RenderClear(renderer);    
+    
+    showText(renderer, 100, 250, "You Won!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, 100, 300, "Press SpaceBar to go to Main Menu!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    SDL_RenderPresent(renderer);
 }

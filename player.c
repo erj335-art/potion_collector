@@ -24,6 +24,11 @@ void player_initialize(void)
 {
     init_sound("sounds/dash.wav", &player_dash_sound);
     init_sound("sounds/yummy.wav", &player_grab_potion_sound);
+    player.level = 1;
+    player.attack = 5;
+    player.defense = 5;
+    player.position_x = 3;
+    player.position_y = 3;
 }
 
 void player_gain_potion_rewards(void)
