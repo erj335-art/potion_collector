@@ -51,7 +51,7 @@ DBG := -g -O0 -fno-omit-frame-pointer
 REL := -O2 -DNDEBUG
 
 # Project structure
-SRC := $(wildcard *.c)
+SRC := $(wildcard *.c) $(shell find src -name '*.c')
 OBJ := $(SRC:.c=.o)
 DEP := $(OBJ:.o=.d)
 BIN := app
