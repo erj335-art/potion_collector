@@ -16,6 +16,9 @@
 #define APP_WIDTH 12 * TEXTURE_WIDTH
 #define APP_HEIGHT 12 * TEXTURE_HEIGHT
 
+#define APP_MAINMENU_WIDTH 400
+#define APP_MAINMENU_HEIGHT 100
+
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
@@ -32,7 +35,7 @@ char readUserInput(void);
 int main(void)
 {
     // Initialize SDL Systems.
-    window = sdl_initialize_window(APP_NAME, APP_HEIGHT, APP_WIDTH);
+    window = sdl_initialize_window(APP_NAME, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
     renderer = sdl_initialize_renderer(window);
     sdl_initialize_audio();
 
@@ -63,11 +66,15 @@ int main(void)
                     reset_potions();
                     map_load("maps/level1.txt");
                     setGameState(INGAME);
+                    SDL_SetWindowSize(window, APP_HEIGHT, APP_WIDTH);
+                    SDL_SetWindowTitle(window, "Potion Collector - In Game");
                 }
                 
                 if (gameState() == FINISHED && event.key.key == SDLK_SPACE)
                 {
                     setGameState(MAIN_MENU);
+                    SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
+                    SDL_SetWindowTitle(window, "Potion Collector - Main Menu");
                 }
 
                 if (gameState() == INGAME)
@@ -85,6 +92,8 @@ int main(void)
                     {
                         printf("All potions collected! You win!\n");
                         setGameState(FINISHED);
+                        SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
+                        SDL_SetWindowTitle(window, "Potion Collector - Game Finished");
                     }
                 }
             }
@@ -177,7 +186,7 @@ void renderMainMenu(void)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); 
     SDL_RenderClear(renderer);    
     
-    showText(renderer, 100, 250, "Press SpaceBar to Start!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, 100, 50, "Press SpaceBar to Start!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
     SDL_RenderPresent(renderer);
 }
 
@@ -186,7 +195,7 @@ void renderGameFinished(void)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); 
     SDL_RenderClear(renderer);    
     
-    showText(renderer, 100, 250, "You Won!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
-    showText(renderer, 100, 300, "Press SpaceBar to go to Main Menu!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, 100, 50, "You Won!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, 100, 75, "Press SpaceBar to go to Main Menu!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
     SDL_RenderPresent(renderer);
 }
