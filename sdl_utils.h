@@ -6,6 +6,12 @@
 #include <stdbool.h>
 
 // =======================================================
+// SDL SYSTEMS
+// =======================================================
+SDL_Window *sdl_initialize_window(char* APP_NAME, int APP_WIDTH, int APP_HEIGHT);
+SDL_Renderer *sdl_initialize_renderer(SDL_Window* window);
+
+// =======================================================
 // SOUND
 // =======================================================
 typedef struct Sound
@@ -27,5 +33,9 @@ void playSound(Sound *sound);
 // Returns NULL on error.
 SDL_Texture *sdl_load_texture(SDL_Renderer *renderer, const char *file_path);
 
+// =======================================================
+// TEXT RENDERING
+// =======================================================
+void showText(SDL_Renderer *renderer, int x, int y, const char *text, SDL_Color color);
 
 #endif // SDL_UTILS_H

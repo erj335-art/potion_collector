@@ -24,6 +24,7 @@ endif
 
 # ---------------- pkg-config (SDL3) ----------------
 SDL_PKG  := sdl3 sdl3-image
+
 ifeq ($(UNAME_S),Darwin)
     PKGCONF := pkg-config
 else ifdef IS_MSYS2

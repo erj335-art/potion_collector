@@ -6,7 +6,6 @@ int potionQuantity = 0;
 
 void create_potion(int x, int y)
 {
-    printf("Creating potion %d", potionQuantity);
     potions[potionQuantity].x = x;
     potions[potionQuantity].y = y;
     potions[potionQuantity].visible = true;
@@ -33,4 +32,15 @@ bool potion_tryCollect(int player_x, int player_y)
 Potion *get_potions()
 {
     return potions;
+}
+
+int are_all_potions_collected()
+{
+    int quantity = 0;
+    for (int i = 0; i < POTION_SIZE; i++)
+    {
+        if (!potions[i].visible)
+            quantity++;
+    }
+    return quantity == POTION_SIZE;
 }
