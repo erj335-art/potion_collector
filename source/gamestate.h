@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 typedef enum {
+    INITIAL_SCREEN,
     MAIN_MENU,
     INGAME,
     FINISHED

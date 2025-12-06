@@ -45,13 +45,15 @@ endif
 CSTD := -std=c17
 WARN := -Wall -Wextra -Wpedantic
 DEPS := -MMD -MP
+INC  := -Isource -Iutils
 
 # Debug and Release flags
 DBG := -g -O0 -fno-omit-frame-pointer
 REL := -O2 -DNDEBUG
 
 # Project structure
-SRC := $(wildcard *.c) $(shell find src -name '*.c')
+# Top-level C files plus sources in source/ and utils/
+SRC := $(wildcard *.c) $(wildcard source/*.c) $(wildcard utils/*.c)
 OBJ := $(SRC:.c=.o)
 DEP := $(OBJ:.o=.d)
 BIN := app
@@ -61,11 +63,11 @@ BIN := app
 # Default: debug
 all: debug
 
-debug: CFLAGS := $(CSTD) $(WARN) $(DBG) $(DEPS) $(PKG_CFLAGS)
+debug: CFLAGS := $(CSTD) $(WARN) $(DBG) $(DEPS) $(INC) $(PKG_CFLAGS)
 debug: LDFLAGS := $(PKG_LIBS)
 debug: $(BIN)
 
-release: CFLAGS := $(CSTD) $(WARN) $(REL) $(DEPS) $(PKG_CFLAGS)
+release: CFLAGS := $(CSTD) $(WARN) $(REL) $(DEPS) $(INC) $(PKG_CFLAGS)
 release: LDFLAGS := $(PKG_LIBS)
 release: $(BIN)
 

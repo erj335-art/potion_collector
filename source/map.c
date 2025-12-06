@@ -1,5 +1,5 @@
-#include "map.h"
 #include <stdio.h>
+#include "map.h"
 #include "potion.h"
 
 char map_data[MAP_ROWS][MAP_COLS];

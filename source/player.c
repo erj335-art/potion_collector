@@ -1,5 +1,5 @@
 #include "player.h"
-#include "sdl_utils.h"
+#include "../utils/sdl_utils.h"
 
 #include <stdio.h>
 
