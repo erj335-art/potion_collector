@@ -53,7 +53,7 @@ REL := -O2 -DNDEBUG
 
 # Project structure
 # Top-level C files plus sources in source/ and utils/
-SRC := $(wildcard *.c) $(wildcard source/*.c) $(wildcard utils/*.c)
+SRC := $(wildcard *.c) $(wildcard **/*.c)
 OBJ := $(SRC:.c=.o)
 DEP := $(OBJ:.o=.d)
 BIN := app
