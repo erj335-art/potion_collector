@@ -24,6 +24,7 @@ typedef struct Sound
 int sdl_initialize_audio();
 bool init_sound(const char *fname, Sound *sound);
 void playSound(Sound *sound);
+void stopSound(Sound *sound);
 
 // =======================================================
 // TEXTURE

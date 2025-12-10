@@ -94,6 +94,11 @@ void playSound(Sound *sound)
         SDL_PutAudioStreamData(sound->stream, sound->wav_data, (int)sound->wav_data_len);
 }
 
+void stopSound(Sound *sound)
+{
+    SDL_ClearAudioStream(sound->stream);
+}
+
 SDL_Texture *sdl_load_texture(SDL_Renderer *renderer, const char *file_path)
 {
     if (!renderer)

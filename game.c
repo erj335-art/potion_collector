@@ -29,6 +29,8 @@ static SDL_Texture *potionTexture = NULL;
 static SDL_Texture *logoTexture = NULL;
 static SDL_Texture *bgTexture = NULL;
 
+static Sound inGameMusic;
+
 void renderGame(void);
 void renderMainMenu(void);
 void renderGameFinished(void);
@@ -50,6 +52,8 @@ int main(void)
     potionTexture = sdl_load_texture(renderer, "sprites/items/potion.png");
     logoTexture = sdl_load_texture(renderer, "sprites/logo.png");
     bgTexture = sdl_load_texture(renderer, "sprites/bg.png");
+
+    init_sound("sounds/wizardBackground.wav", &inGameMusic);
 
     // Game Loop
     int running = 1;
@@ -86,6 +90,7 @@ int main(void)
                             setGameState(INGAME);
                             SDL_SetWindowSize(window, APP_HEIGHT, APP_WIDTH);
                             SDL_SetWindowTitle(window, "Potion Collector - In Game");
+                            playSound(&inGameMusic);
                         }
                         else if (opSelected == 1)
                         {
@@ -121,6 +126,7 @@ int main(void)
                     setGameState(MAIN_MENU);
                     SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
                     SDL_SetWindowTitle(window, "Potion Collector - Main Menu");
+                    stopSound(&inGameMusic);
                 }
                 else if (gameState() == INGAME)
                 {
