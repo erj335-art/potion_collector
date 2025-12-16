@@ -12,9 +12,9 @@
 #define TEXTURE_WIDTH 32
 #define TEXTURE_HEIGHT 32
 
-// 12 by 12 tiles. Each tile having 16 pixels by 16 pixels.
-#define APP_WIDTH 12 * TEXTURE_WIDTH
-#define APP_HEIGHT 12 * TEXTURE_HEIGHT
+// 12 by 12 tiles.
+#define APP_WIDTH (12 * TEXTURE_WIDTH)   // 384
+#define APP_HEIGHT (12 * TEXTURE_HEIGHT) // 384
 
 #define APP_MAINMENU_WIDTH 512
 #define APP_MAINMENU_HEIGHT 512
@@ -35,7 +35,34 @@ void renderGame(void);
 void renderMainMenu(void);
 void renderGameFinished(void);
 void renderInitialScreen(void);
-char readUserInput(void);
+
+static void set_menu_presentation(void)
+{
+    // Scale menu to window/fullscreen while keeping aspect ratio.
+    SDL_SetRenderLogicalPresentation(renderer,
+                                     APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    // Windowed mode for menus.
+    SDL_SetWindowFullscreen(window, false);
+}
+
+static void set_game_presentation(void)
+{
+    // Scale game to window/fullscreen with pixel-art-friendly integer scaling.
+    SDL_SetRenderLogicalPresentation(renderer,
+                                     APP_WIDTH, APP_HEIGHT,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    // Fullscreen (borderless desktop)
+    SDL_SetWindowFullscreen(window, true);
+}
+
+static void set_nearest(SDL_Texture *t)
+{
+    if (t)
+        SDL_SetTextureScaleMode(t, SDL_SCALEMODE_NEAREST);
+}
 
 int opSelected = 0;
 
@@ -46,12 +73,23 @@ int main(void)
     renderer = sdl_initialize_renderer(window);
     sdl_initialize_audio();
 
+    // IMPORTANT: set presentation once (start in menu sizing).
+    set_menu_presentation();
+
     grassTexture = sdl_load_texture(renderer, "sprites/tiles/tile000.png");
     wallTexture = sdl_load_texture(renderer, "sprites/tiles/tile001.png");
     wizardTexture = sdl_load_texture(renderer, "sprites/characters/wizard.png");
     potionTexture = sdl_load_texture(renderer, "sprites/items/potion.png");
     logoTexture = sdl_load_texture(renderer, "sprites/logo.png");
     bgTexture = sdl_load_texture(renderer, "sprites/bg.png");
+
+    // Keep scaled pixel art crisp (default is linear).
+    set_nearest(grassTexture);
+    set_nearest(wallTexture);
+    set_nearest(wizardTexture);
+    set_nearest(potionTexture);
+    set_nearest(logoTexture);
+    set_nearest(bgTexture);
 
     init_sound("sounds/wizardBackground.wav", &inGameMusic);
 
@@ -62,7 +100,7 @@ int main(void)
     {
         Uint32 frame_start = SDL_GetTicks();
 
-        // Capture Events
+        // Capture events (like key presses).
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -76,6 +114,7 @@ int main(void)
                     setGameState(MAIN_MENU);
                     SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
                     SDL_SetWindowTitle(window, "Potion Collector - Main Menu");
+                    set_menu_presentation();
                 }
                 else if (gameState() == MAIN_MENU)
                 {
@@ -83,12 +122,15 @@ int main(void)
                     {
                         if (opSelected == 0)
                         {
-                            // Initialize game if op 0 selected
                             player_initialize();
                             reset_potions();
                             map_load("maps/level1.txt");
+
                             setGameState(INGAME);
-                            SDL_SetWindowSize(window, APP_HEIGHT, APP_WIDTH);
+
+                            // Switch to game logical resolution BEFORE presenting frames.
+                            set_game_presentation();
+
                             SDL_SetWindowTitle(window, "Potion Collector - In Game");
                             playSound(&inGameMusic);
                         }
@@ -124,8 +166,12 @@ int main(void)
                 else if (gameState() == FINISHED && event.key.key == SDLK_SPACE)
                 {
                     setGameState(MAIN_MENU);
+
+                    SDL_SetWindowFullscreen(window, false);
                     SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
                     SDL_SetWindowTitle(window, "Potion Collector - Main Menu");
+
+                    set_menu_presentation();
                     stopSound(&inGameMusic);
                 }
                 else if (gameState() == INGAME)
@@ -143,14 +189,17 @@ int main(void)
                     {
                         printf("All potions collected! You win!\n");
                         setGameState(FINISHED);
+
+                        SDL_SetWindowFullscreen(window, false);
                         SDL_SetWindowSize(window, APP_MAINMENU_WIDTH, APP_MAINMENU_HEIGHT);
                         SDL_SetWindowTitle(window, "Potion Collector - Game Finished");
+
+                        // Finished screen uses menu-style logical sizing.
+                        set_menu_presentation();
                     }
                 }
             }
         }
-
-        // Render textures
 
         if (gameState() == INITIAL_SCREEN)
             renderInitialScreen();
@@ -161,9 +210,6 @@ int main(void)
         else if (gameState() == FINISHED)
             renderGameFinished();
 
-        // map_print(player_get_row(), player_get_col());
-
-        // Delay to maintain frame rate
         Uint32 elapsed = SDL_GetTicks() - frame_start;
         if (elapsed < FRAME_MS)
             SDL_Delay(FRAME_MS - elapsed);
@@ -172,7 +218,6 @@ int main(void)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
     return 0;
 }
 
@@ -185,27 +230,25 @@ void renderMap()
             SDL_FRect dst_rect = {TEXTURE_WIDTH * y, TEXTURE_HEIGHT * x, TEXTURE_WIDTH, TEXTURE_HEIGHT};
 
             if (map_get_tile(x, y) == TILE_FLOOR)
-            {
                 SDL_RenderTexture(renderer, grassTexture, NULL, &dst_rect);
-            }
             else if (map_get_tile(x, y) == TILE_WALL)
-            {
                 SDL_RenderTexture(renderer, wallTexture, NULL, &dst_rect);
-            }
         }
     }
 }
 
 void renderPlayer()
 {
-    // Render the wizard at the player's position
-    SDL_FRect wizard_rect = {TEXTURE_WIDTH * player_get_col(), TEXTURE_WIDTH * player_get_row(), TEXTURE_WIDTH, TEXTURE_HEIGHT};
+    // FIX: Y uses TEXTURE_HEIGHT, not TEXTURE_WIDTH.
+    SDL_FRect wizard_rect = {
+        TEXTURE_WIDTH * player_get_col(),
+        TEXTURE_HEIGHT * player_get_row(),
+        TEXTURE_WIDTH, TEXTURE_HEIGHT};
     SDL_RenderTexture(renderer, wizardTexture, NULL, &wizard_rect);
 }
 
 void renderPotions()
 {
-    // Render all potions
     Potion *potions = get_potions();
     for (int i = 0; i < 10; i++)
     {
@@ -221,18 +264,21 @@ void renderGame(void)
 {
     const int charsize = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
 
-    /* as you can see from this, rendering draws over whatever was drawn before it. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); /* black, full alpha */
-    SDL_RenderClear(renderer);                                   /* start with a blank canvas. */
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
 
     renderMap();
     renderPlayer();
     renderPotions();
 
     showText(renderer, 100, 0, "Potion Collector!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
-    SDL_RenderDebugTextFormat(renderer, (float)((APP_WIDTH - (charsize * 46)) / 2), APP_HEIGHT - charsize, "(This program has been running for %" SDL_PRIu64 " seconds.)", SDL_GetTicks() / 1000);
+    SDL_RenderDebugTextFormat(renderer,
+                              (float)((APP_WIDTH - (charsize * 46)) / 2),
+                              APP_HEIGHT - charsize,
+                              "(This program has been running for %" SDL_PRIu64 " seconds.)",
+                              SDL_GetTicks() / 1000);
 
-    SDL_RenderPresent(renderer); /* put it all on the screen! */
+    SDL_RenderPresent(renderer);
 }
 
 void renderMainMenu(void)
@@ -243,31 +289,37 @@ void renderMainMenu(void)
     SDL_FRect logoRect = {0, 0, 512, 512};
     SDL_RenderTexture(renderer, bgTexture, NULL, &logoRect);
 
-    // Show Start Game Option
     if (opSelected == 0)
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 50, "-> START GAME", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 50,
+                 "-> START GAME", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
     else
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 50, "   START GAME", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 50,
+                 "   START GAME", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
 
-    // Show Select Level Option
     if (opSelected == 1)
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 100, "-> SELECT LEVEL", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 100,
+                 "-> SELECT LEVEL", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
     else
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 100, "   SELECT LEVEL", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 100,
+                 "   SELECT LEVEL", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
 
-    // Show Options Option
     if (opSelected == 2)
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 150, "-> OPTIONS", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 150,
+                 "-> OPTIONS", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
     else
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 150, "   OPTIONS", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 150,
+                 "   OPTIONS", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
 
-    // Show Exit Option
     if (opSelected == 3)
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 200, "-> EXIT", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 200,
+                 "-> EXIT", (SDL_Color){255, 255, 0, SDL_ALPHA_OPAQUE});
     else
-        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 200, "   EXIT", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+        showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 15)) / 2), 200,
+                 "   EXIT", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
 
-    showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 34)) / 2), 475, "<< PRESS SPACE TO SELECT OPTION >>", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 34)) / 2), 475,
+             "<< PRESS SPACE TO SELECT OPTION >>", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+
     SDL_RenderPresent(renderer);
 }
 
@@ -279,7 +331,9 @@ void renderInitialScreen(void)
     SDL_FRect logoRect = {0, 0, 512, 512};
     SDL_RenderTexture(renderer, logoTexture, NULL, &logoRect);
 
-    showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 25)) / 2), 475, "<< PRESS SPACE TO START>>", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+    showText(renderer, (float)((APP_MAINMENU_WIDTH - (SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * 25)) / 2), 475,
+             "<< PRESS SPACE TO START>>", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+
     SDL_RenderPresent(renderer);
 }
 
@@ -290,5 +344,6 @@ void renderGameFinished(void)
 
     showText(renderer, 100, 50, "You Won!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
     showText(renderer, 100, 75, "Press SpaceBar to go to Main Menu!", (SDL_Color){255, 255, 255, SDL_ALPHA_OPAQUE});
+
     SDL_RenderPresent(renderer);
 }
