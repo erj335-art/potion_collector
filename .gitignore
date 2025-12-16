@@ -54,11 +54,8 @@ dkms.conf
 # debug information files
 *.dwo
 
-# Ignore all
-*
+# ignore macOS system files
+.DS_Store
 
-# Unignore all with extensions
-!*.*
-
-# Unignore all dirs
-!*/
+# ignore vscode settings
+.vscode/
