@@ -8,4 +8,4 @@ Feel free to share your improvements.
 
 We always compile using:
 
-`gcc -Wall -Wextra -Werror -std=c17 game.c -o game`
+`gcc -Wall -Wextra -Werror -std=c17 game.c map.c player.c -o game`
